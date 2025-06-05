@@ -53,7 +53,7 @@ namespace dll
 		bool is_valid{ false };
 
 	public:
-		PACK() :max_size{ 1 }, m_ptr{ reinterpret_cast<T*>(calloc(1,sizeof(T)) }
+		PACK() :max_size{ 1 }, m_ptr{ reinterpret_cast<T*>(calloc(1,sizeof(T))) }
 		{
 			if (m_ptr)is_valid = true;
 		}
@@ -68,7 +68,7 @@ namespace dll
 
 		bool valid() const
 		{
-			return is valid;
+			return is_valid;
 		}
 		size_t capacity() const
 		{
@@ -110,7 +110,7 @@ namespace dll
 
 			if (next_pos < max_size)
 			{
-				T* temp_ptr = reinterpret_cast<T*>(calloc(max_size), sizeof(T));
+				T* temp_ptr = reinterpret_cast<T*>(calloc(max_size, sizeof(T)));
 
 				for (size_t i = 0; i < max_size; ++i)
 				{
@@ -126,7 +126,7 @@ namespace dll
 			}
 			else
 			{
-				T* temp_ptr = reinterpret_cast<T*>(calloc(max_size + 1), sizeof(T));
+				T* temp_ptr = reinterpret_cast<T*>(calloc(max_size + 1, sizeof(T)));
 
 				for (size_t i = 0; i < max_size; ++i)
 				{
@@ -257,6 +257,8 @@ namespace dll
 		void Release();
 	};
 
+	typedef OBJECT* GameObject;
+	typedef CREATURES* GameCreature;
 
 	// FUNCTIONS ************************************
 

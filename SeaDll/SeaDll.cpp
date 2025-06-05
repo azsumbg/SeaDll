@@ -59,7 +59,6 @@ dll::PROTON::PROTON(FPOINT _start_pos, float _width, float _height)
 	center.x = start.x + x_radius;
 	center.y = start.y + y_radius;
 }
-
 float dll::PROTON::GetWidth()const
 {
 	return width;
@@ -76,7 +75,6 @@ float dll::PROTON::YRadius()const
 {
 	return y_radius;
 }
-
 void dll::PROTON::SetEdges()
 {
 	end.x = start.x + width;
@@ -99,7 +97,6 @@ void dll::PROTON::NewDims(float _new_width, float _new_height)
 	center.x = start.x + x_radius;
 	center.y = start.y + y_radius;
 }
-
 void dll::PROTON::NewWidth(float _new_width)
 {
 	width = _new_width;
@@ -200,7 +197,6 @@ dll::OBJECT::OBJECT(types _what, float _to_x, float _to_y) :PROTON(_to_x, _to_y,
 
 	}
 }
-
 types dll::OBJECT::GetType() const
 {
 	return type;
@@ -594,7 +590,22 @@ float dll::Distance(FPOINT my_point, FPOINT target_point)
 	return (float)(sqrt(a + b));
 }
 
+SEADLL_API dll::OBJECT* dll::CreateObject(types what, float to_x, float to_y)
+{
+	OBJECT* ret{ nullptr };
+	
+	ret = new OBJECT(what, to_x, to_y);
 
+	return ret;
+}
 
+SEADLL_API dll::CREATURES* dll::CreateCreature(types what, float start_x, float start_y, float to_x, float to_y)
+{
+	CREATURES* ret{ nullptr };
+
+	ret = new CREATURES(what, start_x, start_y, to_x, to_y);
+
+	return ret;
+}
 
 ////////////////////////////////////////////////
