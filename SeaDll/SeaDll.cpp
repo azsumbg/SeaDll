@@ -191,7 +191,7 @@ dll::OBJECT::OBJECT(types _what, float _to_x, float _to_y) :PROTON(_to_x, _to_y,
 	case types::hero:
 		NewDims(120.0f, 100.0f);
 		max_frames = 2;
-		frame_delay = 35;
+		frame_delay = 25;
 		break;
 
 
@@ -249,7 +249,7 @@ int dll::OBJECT::GetFrame()
 			break;
 
 		case types::hero:
-			frame_delay = 35;
+			frame_delay = 25;
 			break;
 		}
 
@@ -397,6 +397,9 @@ dll::CREATURES::CREATURES(types __what, float __start_x, float __start_y, float 
 		speed = 5.0f;
 		break;
 	}
+
+	if (center.x > scr_width / 2)dir = dirs::left;
+	else dir = dirs::right;
 }
 void dll::CREATURES::SetPathInfo(float _to_where_x, float _to_where_y)
 {
@@ -426,7 +429,70 @@ bool dll::CREATURES::Move(float gear)
 {
 	float my_speed = speed + gear / 10.0f;
 
-	if (type != types::hero)return false;
+	if (type == types::jelly)
+	{
+		if (ver_dir)
+		{
+			if (move_ey > move_sy && end.y + my_speed <= scr_height)
+			{
+				start.y += my_speed;
+				SetEdges();
+				if (move_ey <= center.y)return false;
+				return true;
+			}
+			if (move_ey < move_sy && start.y - my_speed >= sky)
+			{
+				start.y -= my_speed;
+				SetEdges();
+				if (move_ey >= center.y)return false;
+				return true;
+			}
+		}
+		else if (hor_dir)
+		{
+			if (move_ex > move_sx && end.x + my_speed <= scr_width)
+			{
+				start.x = my_speed;
+				SetEdges();
+				if (move_ex <= center.x)return false;
+				return true;
+			}
+			if (move_ex < move_sx && start.x - my_speed >= 0)
+			{
+				start.x -= my_speed;
+				SetEdges();
+				if (move_ex >= center.x)return false;
+				return true;
+			}
+		}
+		else
+		{
+			if (move_ex > move_sx)
+			{
+				if (end.x + my_speed <= scr_width)
+				{
+					start.x = my_speed;
+					start.y = start.x * slope + intercept;
+					SetEdges();
+					if (move_ex <= center.x)return false;
+					return true;
+				}
+			}
+			else if (move_ex < move_sx)
+			{
+				if (start.x - my_speed >= 0)
+				{
+					start.x -= my_speed;
+					start.y = start.x * slope + intercept;
+					SetEdges();
+					if (move_ex >= center.x)return false;
+					return true;
+				}
+			}
+		}
+
+		return false;
+	}
 
 	switch (dir)
 	{
@@ -477,14 +543,14 @@ bool dll::CREATURES::Move(float gear, float dest_x, float dest_y)
 
 	if (ver_dir)
 	{
-		if (end.y + my_speed <= scr_height)
+		if (move_ey > move_sy && end.y + my_speed <= scr_height)
 		{
 			start.y += my_speed;
 			SetEdges();
 			if (move_ey <= center.y)return false;
 			return true;
 		}
-		if (start.y - my_speed >= 50.0f)
+		if (move_ey < move_sy && start.y - my_speed >= sky)
 		{
 			start.y -= my_speed;
 			SetEdges();
@@ -494,14 +560,14 @@ bool dll::CREATURES::Move(float gear, float dest_x, float dest_y)
 	}
 	else if (hor_dir)
 	{
-		if (end.x + my_speed <= scr_width)
+		if (move_ex > move_sx && end.x + my_speed <= scr_width)
 		{
-			start.x= my_speed;
+			start.x = my_speed;
 			SetEdges();
 			if (move_ex <= center.x)return false;
 			return true;
 		}
-		if (start.x - my_speed >= 0)
+		if (move_ex < move_sx && start.x - my_speed >= 0)
 		{
 			start.x -= my_speed;
 			SetEdges();
@@ -539,7 +605,7 @@ bool dll::CREATURES::Move(float gear, float dest_x, float dest_y)
 }
 void dll::CREATURES::EvilAI(PACK<FPOINT>& pack, float gear)
 {
-	state = states::stop;
+	state = states::patrol;
 	Sort(pack, center);
 
 	FPOINT target = pack.front();
@@ -550,13 +616,19 @@ void dll::CREATURES::EvilAI(PACK<FPOINT>& pack, float gear)
 		if (center.x < target.x)dir = dirs::right;
 		else dir = dirs::left;
 
-		if (!Move(gear, target.x, target.y))state = states::patrol;
+		if (!Move(gear, target.x, target.y))state = states::stop;
 	}
 	else
 	{
-		if (center.x <= scr_width / 2)dir = dirs::right;
-		else dir = dirs::left;
+		if (state != states::patrol)
+		{
+			if (center.x <= scr_width / 2)dir = dirs::right;
+			else dir = dirs::left;
+		}
+		
 		--patrol_move_points;
+		state = states::patrol;
+
 		if (dir == dirs::right)
 		{
 			if (patrol_move_points <= 0)
@@ -568,6 +640,20 @@ void dll::CREATURES::EvilAI(PACK<FPOINT>& pack, float gear)
 			if (!Move(gear))
 			{
 				dir = dirs::left;
+				return;
+			}
+		}
+		else
+		{
+			if (patrol_move_points <= 0)
+			{
+				patrol_move_points = 200;
+				dir = dirs::right;
+				return;
+			}
+			if (!Move(gear))
+			{
+				dir = dirs::right;
 				return;
 			}
 		}
