@@ -134,6 +134,18 @@ dll::OBJECT::OBJECT(types _what, float _to_x, float _to_y) :PROTON(_to_x, _to_y,
 		frame_delay = 0;
 		break;
 
+	case types::bubbles:
+		NewDims(100.0f, 69.0f);
+		max_frames = 40;
+		frame_delay = 2;
+		break;
+
+	case types::grass:
+		NewDims(100.0f, 157.0f);
+		max_frames = 6;
+		frame_delay = 11;
+		break;
+
 	case types::evil1:
 		NewDims(120.0f, 69.0f);
 		max_frames = 49;
@@ -351,42 +363,42 @@ dll::CREATURES::CREATURES(types __what, float __start_x, float __start_y, float 
 	{
 	case types::evil1:
 		speed = 0.7f;
-		sight_scope = 100.0f;
+		sight_scope = 150.0f;
 		break;
 
 	case types::evil2:
 		speed = 0.6f;
-		sight_scope = 110.0f;
+		sight_scope = 160.0f;
 		break;
 
 	case types::evil3:
 		speed = 0.5f;
-		sight_scope = 130.0f;
+		sight_scope = 180.0f;
 		break;
 
 	case types::evil4:
 		speed = 0.8f;
-		sight_scope = 90.0f;
+		sight_scope = 140.0f;
 		break;
 
 	case types::evil5:
 		speed = 0.9f;
-		sight_scope = 90.0f;
+		sight_scope = 140.0f;
 		break;
 
 	case types::evil6:
 		speed = 1.0f;
-		sight_scope = 70.0f;
+		sight_scope = 120.0f;
 		break;
 
 	case types::evil7:
 		speed = 1.2f;
-		sight_scope = 50.0f;
+		sight_scope = 100.0f;
 		break;
 
 	case types::evil8:
 		speed = 0.9f;
-		sight_scope = 80.0f;
+		sight_scope = 130.0f;
 		break;
 
 	case types::jelly:
@@ -411,7 +423,8 @@ void dll::CREATURES::SetPathInfo(float _to_where_x, float _to_where_y)
 	hor_dir = false;
 	ver_dir = false;
 
-	if (move_sx == move_ex || (move_ex > start.x && move_ex <= end.x))
+	if (move_sx == move_ex || (move_ex > start.x && move_ex <= end.x) ||
+		(move_ex > end.x && move_ex < end.x + width) || (move_ex < start.x && move_ex > start.x + width))
 	{
 		ver_dir = true;
 		return;
@@ -427,24 +440,27 @@ void dll::CREATURES::SetPathInfo(float _to_where_x, float _to_where_y)
 }
 bool dll::CREATURES::Move(float gear)
 {
+	
 	float my_speed = speed + gear / 10.0f;
 
 	if (type == types::jelly)
 	{
+		if (start.y <= sky - 100.0f || end.y >= ground + 100.0f)return false;
+		
 		if (ver_dir)
 		{
-			if (move_ey > move_sy && end.y + my_speed <= scr_height)
+			if (move_ey > move_sy)
 			{
-				start.y += my_speed;
+				start.y += my_speed / 2;
 				SetEdges();
-				if (move_ey <= center.y)return false;
+				if (move_ey <= end.y || end.y >= ground)return false;
 				return true;
 			}
-			if (move_ey < move_sy && start.y - my_speed >= sky)
+			if (move_ey < move_sy)
 			{
-				start.y -= my_speed;
+				start.y -= my_speed / 2;
 				SetEdges();
-				if (move_ey >= center.y)return false;
+				if (move_ey >= start.y || start.y <= sky)return false;
 				return true;
 			}
 		}
@@ -474,7 +490,7 @@ bool dll::CREATURES::Move(float gear)
 					start.x = my_speed;
 					start.y = start.x * slope + intercept;
 					SetEdges();
-					if (move_ex <= center.x)return false;
+					if (move_ex <= end.x)return false;
 					return true;
 				}
 			}
@@ -485,7 +501,7 @@ bool dll::CREATURES::Move(float gear)
 					start.x -= my_speed;
 					start.y = start.x * slope + intercept;
 					SetEdges();
-					if (move_ex >= center.x)return false;
+					if (move_ex >= start.x)return false;
 					return true;
 				}
 			}
@@ -543,18 +559,18 @@ bool dll::CREATURES::Move(float gear, float dest_x, float dest_y)
 
 	if (ver_dir)
 	{
-		if (move_ey > move_sy && end.y + my_speed <= scr_height)
+		if (move_ey > move_sy)
 		{
-			start.y += my_speed;
+			start.y += my_speed / 2;
 			SetEdges();
-			if (move_ey <= center.y)return false;
+			if (move_ey <= end.y || end.y >= ground)return false;
 			return true;
 		}
-		if (move_ey < move_sy && start.y - my_speed >= sky)
+		if (move_ey < move_sy)
 		{
-			start.y -= my_speed;
+			start.y -= my_speed / 2;
 			SetEdges();
-			if (move_ey >= center.y)return false;
+			if (move_ey >= start.y || start.y <= sky)return false;
 			return true;
 		}
 	}
@@ -633,7 +649,7 @@ void dll::CREATURES::EvilAI(PACK<FPOINT>& pack, float gear)
 		{
 			if (patrol_move_points <= 0)
 			{
-				patrol_move_points = 200;
+				patrol_move_points = 400;
 				dir = dirs::left;
 				return;
 			}
@@ -647,7 +663,7 @@ void dll::CREATURES::EvilAI(PACK<FPOINT>& pack, float gear)
 		{
 			if (patrol_move_points <= 0)
 			{
-				patrol_move_points = 200;
+				patrol_move_points = 400;
 				dir = dirs::right;
 				return;
 			}
